@@ -1,5 +1,8 @@
 package com.stackroute.datamunger;
 
+import java.util.ArrayList;
+import java.util.List;
+
 /*There are total 5 DataMungertest files:
  * 
  * 1)DataMungerTestTask1.java file is for testing following 3 methods
@@ -34,9 +37,14 @@ public class DataMunger {
 	 */
 
 	public String[] getSplitStrings(String queryString) {
-
-		return null;
+		queryString=queryString.toLowerCase();
+		String[] words=queryString.split("\\s+");
+	
+		
+		return words;
 	}
+
+	
 
 	/*
 	 * Extract the name of the file from the query. File name can be found after a
@@ -47,8 +55,16 @@ public class DataMunger {
 	 */
 
 	public String getFileName(String queryString) {
+		queryString = queryString.toLowerCase();
+		String file = queryString;
+		int IndexOffrom = file.indexOf("from");
+		int IndexOfcsv = file.indexOf("csv");
+		String filename = file.substring(IndexOffrom + 5, IndexOfcsv + 3);
+		//System.out.println(filename); 
 
-		return null;
+		return filename;
+   
+		
 	}
 
 	/*
@@ -62,8 +78,22 @@ public class DataMunger {
 	 */
 	
 	public String getBaseQuery(String queryString) {
+		String Base = null;
+		queryString = queryString.toLowerCase();
+		if (queryString.contains("where")) {
+			String[] BaseQuery = queryString.split(" where");
+			Base = BaseQuery[0];
+		} else if (queryString.contains("group by")) {
+			String[] BaseQuery = queryString.split(" group by");
+			Base = BaseQuery[0];
+		} else if (queryString.contains("order by")) {
+			String[] BaseQuery = queryString.split(" order by");
+			Base = BaseQuery[0];
+		} else {
+			Base = "";
+		}
+		return Base;
 
-		return null;
 	}
 
 	/*
@@ -80,7 +110,14 @@ public class DataMunger {
 	
 	public String[] getFields(String queryString) {
 
-		return null;
+		//avoid regex
+				String[] requiredfields = queryString.split("select")[1].trim().split("from")[0].split("[\\s,]+");
+				for(String field : requiredfields)
+				{
+					System.out.println(field);
+				}
+				return requiredfields;
+				
 	}
 
 	/*
@@ -95,7 +132,17 @@ public class DataMunger {
 	
 	public String getConditionsPartQuery(String queryString) {
 
+		queryString=queryString.toLowerCase();
+		if(queryString.contains("where"))
+		{
+			String whereCondition=queryString.split("order by")[0].split("group by")[0].split("where")[1];
+			System.out.println(whereCondition);
+			return whereCondition;
+		}
+		else
+		{
 		return null;
+		}
 	}
 
 	/*
@@ -115,7 +162,33 @@ public class DataMunger {
 
 	public String[] getConditions(String queryString) {
 
-		return null;
+		queryString=queryString.toLowerCase();
+		String[] nameAndValue;
+		String propertyName,propertyValue,conditionalOperator;
+		int counter=1;
+		if(queryString.contains("where"))
+		{
+			String whereCondition=queryString.split("order by")[0].trim().split("group by")[0].trim().split("where")[1].trim();
+			//can we change this line without using regex
+			String[] conditions=whereCondition.split("\\s+and\\s+|\\s+or\\s+");
+			for(String condition : conditions)
+			{
+				nameAndValue=condition.split("<=|>=|!=|=|<|>");
+				propertyName=nameAndValue[0].trim();
+				propertyValue=nameAndValue[1].trim();
+				conditionalOperator=condition.split(propertyName)[1].trim().split(propertyValue)[0].trim();
+				System.out.println("Condition "+counter+" :");
+				System.out.println("variable : "+propertyName);
+				System.out.println("operator : "+conditionalOperator);
+				System.out.println("value : "+propertyValue);
+				counter++;
+			}
+			return conditions;
+		}
+		else
+		{
+			return null;
+		}
 	}
 
 	/*
@@ -131,7 +204,38 @@ public class DataMunger {
 
 	public String[] getLogicalOperators(String queryString) {
 
-		return null;
+		queryString=queryString.toLowerCase();
+		String[] logicalOperators;
+		//dont use an arraylist in this assignment
+		List<String> operators=new ArrayList<>();
+
+		if(queryString.contains("where"))
+		{
+			String whereCondition=queryString.split("order by")[0].trim().split("group by")[0].trim().split("where")[1].trim();
+			//avoid regex
+			String[] conditions=whereCondition.split("\\s+");
+			for(String word : conditions)
+			{
+				if(word.equals("and"))
+				{
+					operators.add("and");
+					//logicalOperators=new String[]{"and"};
+				}
+				else if(word.equals("or"))
+				{
+					operators.add("or");
+					//logicalOperators=new String[]{"or"};
+				}
+			}
+			logicalOperators=new String[operators.size()];
+			logicalOperators=operators.toArray(logicalOperators);
+		return logicalOperators;
+		}
+		else
+		{
+			return null;
+		}
+		
 	}
 
 	/*
@@ -144,7 +248,16 @@ public class DataMunger {
 
 	public String[] getOrderByFields(String queryString) {
 
-		return null;
+		if(queryString.contains("order by"))
+		{
+			//avoid regex
+			String[] orderByField=queryString.split("order by")[1].trim().split("[\\s,]+");
+			return orderByField;
+		}
+		else
+		{
+			return null;
+		}
 	}
 
 	/*
@@ -158,7 +271,16 @@ public class DataMunger {
 
 	public String[] getGroupByFields(String queryString) {
 
-		return null;
+		if(queryString.contains("group by"))
+		{
+			//avoid regex
+			String[] groupByField=queryString.split("group by")[1].trim().split("[\\s,]+");
+			return groupByField;
+		}
+		else
+		{
+			return null;
+		}
 	}
 
 	/*
@@ -173,7 +295,26 @@ public class DataMunger {
 
 	public String[] getAggregateFunctions(String queryString) {
 
-		return null;
-	}
-
+		String aggregateName,aggregateField;
+		int counter=1;
+		if(queryString.contains("count") || queryString.contains("sum") || queryString.contains("min") || queryString.contains("max") || queryString.contains("avg"))
+		{
+			//please check the requirements. Is it actually required?
+			String[] aggregateFunctions=queryString.split("select")[1].trim().split("from")[0].trim().split(",");
+			for(String function : aggregateFunctions)
+			{
+				aggregateName=function.split("\\(")[0].trim();
+				aggregateField=function.split("\\(")[1].trim().split("\\)")[0].trim();
+				System.out.println("Aggregate "+counter+" :");
+				System.out.println("Aggregate Name : "+aggregateName);
+				System.out.println("Aggregate Field : "+aggregateField);
+				counter++;
+			}
+			return aggregateFunctions;
+		}
+		else
+		{
+			return null;
+		}
+    }
 }
